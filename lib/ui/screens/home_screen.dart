@@ -8,11 +8,18 @@ import '../widgets/stats_card.dart';
 import 'game_screen.dart';
 
 /// Home screen with mode selection and stats
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _isNavigating = false;
+
+  @override
+  Widget build(BuildContext context) {
     final persistenceService = ref.watch(persistenceServiceProvider);
     final highScore = persistenceService.getHighScore();
     final bestStreak = persistenceService.getBestStreak();
@@ -81,21 +88,30 @@ class HomeScreen extends ConsumerWidget {
               // Classic Mode
               GameModeCard(
                 mode: GameMode.classic,
-                onTap: () => _startGame(context, ref, GameMode.classic),
+                onTap:
+                    _isNavigating
+                        ? () {}
+                        : () => _startGame(context, GameMode.classic),
               ),
               const SizedBox(height: 12),
 
               // Timed Challenge
               GameModeCard(
                 mode: GameMode.timedChallenge,
-                onTap: () => _startGame(context, ref, GameMode.timedChallenge),
+                onTap:
+                    _isNavigating
+                        ? () {}
+                        : () => _startGame(context, GameMode.timedChallenge),
               ),
               const SizedBox(height: 12),
 
               // Practice Mode
               GameModeCard(
                 mode: GameMode.practice,
-                onTap: () => _startGame(context, ref, GameMode.practice),
+                onTap:
+                    _isNavigating
+                        ? () {}
+                        : () => _startGame(context, GameMode.practice),
               ),
               const SizedBox(height: 40),
             ],
@@ -105,13 +121,19 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  void _startGame(BuildContext context, WidgetRef ref, GameMode mode) {
+  void _startGame(BuildContext context, GameMode mode) {
+    if (_isNavigating) return;
+
+    setState(() => _isNavigating = true);
+
     // Save last mode
     ref.read(persistenceServiceProvider).saveLastMode(mode);
 
     // Navigate to game screen
     Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (_) => GameScreen(mode: mode)));
+    ).push(MaterialPageRoute(builder: (_) => GameScreen(mode: mode))).then((_) {
+      if (mounted) setState(() => _isNavigating = false);
+    });
   }
 }

@@ -28,6 +28,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   bool _isNewHighScore = false;
+  bool _isNavigating = false;
 
   @override
   void initState() {
@@ -178,14 +179,19 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(
-                                builder: (_) => const HomeScreen(),
-                              ),
-                              (route) => false,
-                            );
-                          },
+                          onPressed:
+                              _isNavigating
+                                  ? null
+                                  : () {
+                                    if (_isNavigating) return;
+                                    setState(() => _isNavigating = true);
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                        builder: (_) => const HomeScreen(),
+                                      ),
+                                      (route) => false,
+                                    );
+                                  },
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             side: const BorderSide(
@@ -199,13 +205,20 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
                       const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (_) => GameScreen(mode: widget.mode),
-                              ),
-                            );
-                          },
+                          onPressed:
+                              _isNavigating
+                                  ? null
+                                  : () {
+                                    if (_isNavigating) return;
+                                    setState(() => _isNavigating = true);
+                                    Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) =>
+                                                GameScreen(mode: widget.mode),
+                                      ),
+                                    );
+                                  },
                           child: const Text('Play Again'),
                         ),
                       ),

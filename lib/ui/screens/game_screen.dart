@@ -25,6 +25,7 @@ class GameScreen extends ConsumerStatefulWidget {
 
 class _GameScreenState extends ConsumerState<GameScreen> {
   bool _navigatedToGameOver = false;
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -143,7 +144,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               child: AnswerButton(
                 country: options[0],
                 onPressed:
-                    isAnswered
+                    isAnswered || _isProcessing
                         ? null
                         : () => _handleAnswer(options[0], controller),
                 isSelected: gameState.selectedAnswer?.code == options[0].code,
@@ -158,7 +159,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               child: AnswerButton(
                 country: options[1],
                 onPressed:
-                    isAnswered
+                    isAnswered || _isProcessing
                         ? null
                         : () => _handleAnswer(options[1], controller),
                 isSelected: gameState.selectedAnswer?.code == options[1].code,
@@ -177,7 +178,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               child: AnswerButton(
                 country: options[2],
                 onPressed:
-                    isAnswered
+                    isAnswered || _isProcessing
                         ? null
                         : () => _handleAnswer(options[2], controller),
                 isSelected: gameState.selectedAnswer?.code == options[2].code,
@@ -192,7 +193,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               child: AnswerButton(
                 country: options[3],
                 onPressed:
-                    isAnswered
+                    isAnswered || _isProcessing
                         ? null
                         : () => _handleAnswer(options[3], controller),
                 isSelected: gameState.selectedAnswer?.code == options[3].code,
@@ -207,7 +208,17 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         if (isAnswered) ...[
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () => controller.nextQuestion(),
+            onPressed:
+                _isProcessing
+                    ? null
+                    : () {
+                      if (_isProcessing) return;
+                      setState(() => _isProcessing = true);
+                      controller.nextQuestion();
+                      Future.delayed(const Duration(milliseconds: 300), () {
+                        if (mounted) setState(() => _isProcessing = false);
+                      });
+                    },
             child: const Text('Next Question'),
           ),
         ],
@@ -216,11 +227,20 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   void _handleAnswer(CountryModel answer, GameController controller) {
+    if (_isProcessing) return;
+
+    setState(() => _isProcessing = true);
+
     // Haptic feedback
     HapticFeedback.mediumImpact();
 
     // Submit answer
     controller.submitAnswer(answer);
+
+    // Reset processing flag after delay
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) setState(() => _isProcessing = false);
+    });
   }
 
   void _showExitDialog(BuildContext context, GameController controller) {
